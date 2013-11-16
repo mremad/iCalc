@@ -1,0 +1,182 @@
+//
+//  ViewController.m
+//  iCalc
+//
+//  Created by Florian Heller on 10/5/12.
+//  Copyright (c) 2012 Florian Heller. All rights reserved.
+//
+
+// Define operation identifiers
+#define OP_NOOP	0
+#define OP_ADD	11
+#define OP_SUB	12
+#define OP_DIV  13
+#define OP_MUL  14
+
+#import "ViewController.h"
+
+@interface ViewController ()
+{
+	// The following variables do not need to be exposed in the public interface
+	// that's why we define them in this class extension in the implementation file.
+	float firstOperand;
+	unsigned char currentOperation;
+	BOOL textFieldShouldBeCleared;
+    NSInteger lastButtonPressed;
+    UIButton * lastUIButtonPressed;
+}
+
+@end
+
+@implementation ViewController
+
+#pragma mark - Object Lifecycle
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+	// Do any additional setup after loading the view, typically from a nib.
+	currentOperation = OP_NOOP;
+	textFieldShouldBeCleared = NO;
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark - UI response operations
+/*	This method get's called whenever an operation button is pressed
+ *	The sender object is a pointer to the calling button in this case. 
+ *	This way, you can easily change the buttons color or other properties
+ */
+
+
+- (IBAction)operationButtonPressed:(UIButton *)sender {
+	// Have a look at the tag-property of the buttons calling this method
+	
+    if(lastUIButtonPressed != nil)
+        [lastUIButtonPressed setBackgroundColor:[UIColor whiteColor]];
+    [sender setBackgroundColor:[UIColor lightGrayColor]];
+        lastUIButtonPressed = sender;
+    
+	// Once a button is pressed, we check if the first operand is zero
+	// If so, we can start a new calculation, otherwise, we replace the first operand with the result of the operation
+    
+    if ((lastButtonPressed >= OP_ADD) && (lastButtonPressed<= OP_MUL))
+    {
+        currentOperation = sender.tag;
+        return;
+    }
+    
+    
+    lastButtonPressed = sender.tag;
+    
+	if (firstOperand == 0.)
+	{
+		firstOperand = [self.numberTextField.text floatValue];
+		currentOperation = sender.tag;
+	}
+	else
+	{
+		firstOperand = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text floatValue]];
+		currentOperation = sender.tag;
+        
+        
+        
+        
+		self.numberTextField.text = [NSString stringWithFormat:@"%.1f",firstOperand];
+		// The previous line does exactly the same as
+		// [self.numberTextField setText:[NSString stringWithFormat:@"%.1f",firstOperand]];
+
+	}
+	textFieldShouldBeCleared = YES;
+}
+
+- (IBAction)resultButtonPressed:(id)sender {
+	
+    lastButtonPressed = 0;
+	// Just calculate the result
+	float result = [self executeOperation:currentOperation withArgument:firstOperand andSecondArgument:[self.numberTextField.text floatValue]];
+	self.numberTextField.text = [NSString stringWithFormat:@"%.1f",result];
+	// Reset the internal state
+	currentOperation = OP_NOOP;
+	firstOperand = 0.;
+    textFieldShouldBeCleared = YES;
+
+}
+
+- (IBAction)numberEntered:(UIButton *)sender {
+    lastButtonPressed = sender.tag;
+    [lastUIButtonPressed setBackgroundColor:[UIColor whiteColor]];
+    
+	// If the textField is to be cleared, just replace it with the pressed number
+	if (textFieldShouldBeCleared)
+	{
+		self.numberTextField.text = [NSString stringWithFormat:@"%i",sender.tag];
+		textFieldShouldBeCleared = NO;
+	}
+	// otherwise, append the pressed number to what is already in the textField
+	else {
+        if (sender.tag == 10) {
+            
+            NSCharacterSet *cset = [NSCharacterSet characterSetWithCharactersInString:@"."];
+            NSRange range = [self.numberTextField.text rangeOfCharacterFromSet:cset];
+            if (range.location == NSNotFound) {
+                
+                self.numberTextField.text = [self.numberTextField.text stringByAppendingString:@"."];
+            }
+
+        }
+        else
+        {
+            if ([self.numberTextField.text isEqualToString: @"0"])
+                self.numberTextField.text = [NSString stringWithFormat:@"%i",sender.tag];
+            
+            else self.numberTextField.text = [self.numberTextField.text stringByAppendingFormat:@"%i", sender.tag];
+            
+        }
+		
+	}
+}
+
+// The parameter type id says that any object can be sender of this method.
+// As we do not need the pointer to the clear button here, it is not really important.
+- (IBAction)clearDisplay:(id)sender {
+	firstOperand = 0;
+	currentOperation = OP_NOOP;
+	self.numberTextField.text = @"0";
+}
+
+#pragma mark - General Methods
+// This method returns the result of the specified operation
+// It is placed here since it is needed in two other methods
+- (float)executeOperation:(char)operation withArgument:(float)firstArgument andSecondArgument:(float)secondArgument;
+{
+	switch (operation) {
+		case OP_ADD:
+			return firstArgument + secondArgument;
+			break;
+		case OP_SUB:
+			return firstArgument - secondArgument;
+        case OP_DIV:
+            if (secondArgument != 0) {
+                return firstArgument / secondArgument;
+            }
+            else
+                return NAN;
+			
+        case OP_MUL:
+			return firstArgument * secondArgument;
+		default:
+			return NAN;
+			break;
+	}
+}
+
+- (BOOL)prefersStatusBarHidden;
+{
+    return YES;
+}
+@end
