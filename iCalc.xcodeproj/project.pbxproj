@@ -19,6 +19,7 @@
 		4C6CBA8D161F28DD0020BFF7 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C6CBA8C161F28DD0020BFF7 /* ViewController.m */; };
 		4C6CBA90161F28DD0020BFF7 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4C6CBA8E161F28DD0020BFF7 /* ViewController.xib */; };
 		D93C3D7318379ED6006DBF35 /* BasicCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = D93C3D7218379ED6006DBF35 /* BasicCalculator.m */; };
+		D93C3D761837DEE5006DBF35 /* ResultManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D93C3D751837DEE5006DBF35 /* ResultManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,8 @@
 		4C6CBA8F161F28DD0020BFF7 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
 		D93C3D7118379ED6006DBF35 /* BasicCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BasicCalculator.h; sourceTree = "<group>"; };
 		D93C3D7218379ED6006DBF35 /* BasicCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BasicCalculator.m; sourceTree = "<group>"; };
+		D93C3D741837DEE5006DBF35 /* ResultManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ResultManager.h; sourceTree = "<group>"; };
+		D93C3D751837DEE5006DBF35 /* ResultManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ResultManager.m; sourceTree = "<group>"; };
 		D9B1082A182534B700341D45 /* data.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = data.plist; path = iCalc/data.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -88,6 +91,8 @@
 		4C6CBA79161F28DD0020BFF7 /* iCalc */ = {
 			isa = PBXGroup;
 			children = (
+				D93C3D741837DEE5006DBF35 /* ResultManager.h */,
+				D93C3D751837DEE5006DBF35 /* ResultManager.m */,
 				4C6CBA82161F28DD0020BFF7 /* AppDelegate.h */,
 				4C6CBA83161F28DD0020BFF7 /* AppDelegate.m */,
 				4C6CBA8B161F28DD0020BFF7 /* ViewController.h */,
@@ -182,6 +187,7 @@
 			files = (
 				D93C3D7318379ED6006DBF35 /* BasicCalculator.m in Sources */,
 				4C6CBA80161F28DD0020BFF7 /* main.m in Sources */,
+				D93C3D761837DEE5006DBF35 /* ResultManager.m in Sources */,
 				4C6CBA84161F28DD0020BFF7 /* AppDelegate.m in Sources */,
 				4C6CBA8D161F28DD0020BFF7 /* ViewController.m in Sources */,
 			);

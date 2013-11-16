@@ -21,6 +21,8 @@
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
 		self.rememberLastResult = YES;
+        self.appState = undefinedState;
+        
 	}
 	return self;
 }
@@ -36,14 +38,14 @@
 
 #pragma mark Method implementation
 //Set our lastOperand cache to be another operand
-- (void)setFirstOperand:(NSNumber*)anOperand;
+- (void)setFirstOperand:(NSNumber*)anOperand
 {
 	self.lastOperand = anOperand;
 }
 
 // This method performs an operation with the given operation and the second operand. 
 // After the operation is performed, the result is written to lastOperand 
-- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand;
+- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand storeResult:(BOOL)storeRes
 {
 	NSNumber *result;
     
@@ -55,7 +57,9 @@
             result = [NSNumber numberWithFloat:([self.lastOperand floatValue] * [operand floatValue])];
             break;
         case BCOperatorDivision:
+            if(operand.floatValue != 0)
             result = [NSNumber numberWithFloat:([self.lastOperand floatValue] / [operand floatValue])];
+            else result = [NSNumber numberWithFloat:NAN];
             break;
         case BCOperatorSubtraction:
             result = [NSNumber numberWithFloat:([self.lastOperand floatValue] - [operand floatValue])];
@@ -65,8 +69,10 @@
     }
 	
 		 //this is autoreleased
-		self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
+    self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
 	
+    if(storeRes)
+        self.lastResult = result;
 	
 	// Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
 	if (_delegate != nil) {

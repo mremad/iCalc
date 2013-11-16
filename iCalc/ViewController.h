@@ -19,7 +19,7 @@
 
 @property (strong, nonatomic) IBOutlet UILabel *rightRemainingEntries;
 
-@property NSMutableArray *lastTenResults;
+
 @property (weak, nonatomic) IBOutlet UITextField *numberTextField;
 
 @property (strong, nonatomic) IBOutlet UILabel *expressionModeLabel;

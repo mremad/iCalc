@@ -8,6 +8,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ResultManager.h"
 
 //This is the set of operations we support
 typedef enum BCOperator : NSUInteger {
@@ -18,6 +19,16 @@ typedef enum BCOperator : NSUInteger {
 	BCOperatorMultiplication
 	
 } BCOperator;
+
+typedef enum ApplicationState : NSUInteger
+{
+    operandOnlyState = 0,
+    operandAndOperatorState,
+    twoOperandsAndOperatorState,
+    expressionState,
+    undefinedState
+    
+} ApplicationState ;
 
 @protocol BasicCalculatorDelegate <NSObject>    // Task 1.2 make ViewController comply with this delegate
 
@@ -46,9 +57,10 @@ typedef enum BCOperator : NSUInteger {
 @property (strong) id<BasicCalculatorDelegate> delegate;
 @property (strong) NSNumber *lastOperand;
 @property (strong) NSNumber *lastResult;        // Task 1.3: Use this property for KVO
+@property ApplicationState appState;
 
 - (void)setFirstOperand:(NSNumber*)anOperand;
-- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand;
+- (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand storeResult:(BOOL)storeRes;
 - (void)performExpressionOperation:(NSString*)expression;
 - (NSString*)getFormatForDecimalPrecision:(NSInteger)precision;
 - (void)reset;

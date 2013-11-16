@@ -57,20 +57,7 @@
     
     // Register the preference defaults early.
     
-    NSString *error;
-    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *plistPath = [rootPath stringByAppendingPathComponent:@"ResultsHistory.plist"];
-    
-    NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:self.viewController.lastTenResults
-                                                                   format:NSPropertyListXMLFormat_v1_0
-                                                         errorDescription:&error];
-    if(plistData) {
-        [plistData writeToFile:plistPath atomically:YES];
-    }
-    else {
 
-    }
-    
     [self.viewController saveCurrentState];
     
 }
