@@ -301,6 +301,11 @@
     if([self errorCheck])
         return;
     
+    if(lastUIButtonPressed != nil)
+        [lastUIButtonPressed setBackgroundColor:[UIColor whiteColor]];
+    [sender setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:1 alpha:0.1]];
+    lastUIButtonPressed = sender;
+    
     if(appState == expressionState)
     {
         switch (sender.tag) {
@@ -324,13 +329,6 @@
         return;
     }
     
-
-    if(lastUIButtonPressed != nil)
-        [lastUIButtonPressed setBackgroundColor:[UIColor whiteColor]];
-    [sender setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:1 alpha:0.1]];
-        lastUIButtonPressed = sender;
-    
-   
     
 
     if ((lastButtonPressed >= BCOperatorAddition) && (lastButtonPressed<= BCOperatorMultiplication))
