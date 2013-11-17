@@ -133,6 +133,7 @@
     
     basicCalculatorModel = [[BasicCalculator alloc] init];
     basicCalculatorModel.delegate = self;
+    basicCalculatorModel.primeDelegate = self;
     [basicCalculatorModel addObserver:resultManager forKeyPath:@"lastResult" options:0 context:nil];
     
     
@@ -480,5 +481,24 @@
         self.numberTextField.text = @"Error";
     else
         self.numberTextField.text = [NSString stringWithFormat:[basicCalculatorModel getFormatForDecimalPrecision:_selectedDecimalPrecision],result.floatValue];
+}
+-(void)didPrimeCheckNumber:(NSNumber *)theNumber result:(BOOL)theIsPrime{
+    
+    [self.primeActivityIndicator stopAnimating];
+    
+    NSString *baseString = [theNumber stringValue];
+    
+    if (theIsPrime) {
+        self.primeLabel.text = [baseString stringByAppendingString:@" is a prime number"];
+    } else {
+        self.primeLabel.text = [baseString stringByAppendingString:@" is not a prime number"];
+    }
+}
+
+-(void)willPrimeCheckNumber:(NSNumber *) theNumber
+{
+    [self.primeActivityIndicator startAnimating];
+    self.primeLabel.text = [[@"Checking if " stringByAppendingString:theNumber.stringValue]stringByAppendingString:@" is a prime number"];
+    
 }
 @end

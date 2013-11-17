@@ -11,6 +11,14 @@
 
 
 #pragma mark Object Lifecycle
+
+@interface BasicCalculator ()
+{
+    NSMutableArray* dependantQueues;
+    NSOperationQueue * _myOpQueue;
+}
+@end
+
 @implementation BasicCalculator
 
 
@@ -20,9 +28,12 @@
 	if (self != nil) {
 		self.lastOperand = [NSNumber numberWithInt:0];
 		self.delegate = nil;
+        self.primeDelegate = nil;
 		self.rememberLastResult = YES;
         self.appState = undefinedState;
-        
+        _myOpQueue = [[NSOperationQueue alloc] init];
+        dependantQueues = [[NSMutableArray alloc] init];
+
 	}
 	return self;
 }
@@ -32,6 +43,7 @@
 	//With synthesized setters, you set the object to nil to release it
 	//If delegate would be just a simple ivar, we would call [delegate release];
 	self.delegate = nil;
+    self.primeDelegate = nil;
 	self.lastOperand = nil;
 }
 
@@ -68,12 +80,15 @@
             break;
     }
 	
-		 //this is autoreleased
+    //this is autoreleased
     self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
 	
     if(storeRes)
         self.lastResult = result;
-	
+    
+    //Prime call
+     // [self checkByGCD:result.integerValue];
+	[self checkByOpQueue:result.integerValue];
 	// Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
 	if (_delegate != nil) {
 		if ([_delegate respondsToSelector:@selector(operationDidCompleteWithResult:)])
@@ -129,7 +144,7 @@
             break;
         }
         
-        // sleep(1);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
+         sleep(1);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
     }
     if (checkValue == theInteger)
     {
@@ -140,96 +155,13 @@
 }
 
 
--(BOOL)errorCheck
-{
-    if(NO/*[self.numberTextField.text isEqualToString:@"Error"]*/)
-    {
-        
-        return YES;
-    }
-    else return NO;
-}
-
--(NSString*) removeTrailingZeros:(float)number
-
-{
-    
-    NSMutableString* returnString = [NSMutableString stringWithFormat:@"%f",number];
-    
-    
-    
-    int i = [returnString length]-1;
-    
-    
-    
-    while(i>=0)
-        
-    {
-        
-        if([returnString characterAtIndex:i] == '0')
-            
-        {
-            
-            returnString = (NSMutableString*)[returnString substringToIndex:(i)];
-            
-        }
-        
-        else if([returnString characterAtIndex:i] == '.')
-            
-        {
-            
-            returnString = (NSMutableString*)[returnString substringToIndex:(i)];
-            
-            break;
-            
-        }
-        
-        else
-            
-        {
-            
-            break;
-            
-        }
-        
-        
-        
-        i = [returnString length] - 1;
-        
-    }
-    
-    return returnString;
-    
-}
 
 -(NSString*) getFormatForDecimalPrecision:(NSInteger)precision
 {
     return [[[NSMutableString stringWithString:@"%."] stringByAppendingString:[NSString stringWithFormat:@"%d",precision]] stringByAppendingString:@"f"];
 }
 
-// This method returns the result of the specified operation
-// It is placed here since it is needed in two other methods
-- (float)executeOperation:(BCOperator)operation withArgument:(float)firstArgument andSecondArgument:(float)secondArgument;
-{
-	switch (operation) {
-		case BCOperatorAddition:
-			return firstArgument + secondArgument;
-			break;
-		case BCOperatorSubtraction:
-			return firstArgument - secondArgument;
-        case BCOperatorDivision:
-            if (secondArgument != 0)
-                return firstArgument / secondArgument;
-            else
-                return NAN;
-        case BCOperatorMultiplication:
-			return firstArgument * secondArgument;
-            
-		default:
-			return NAN;
-			break;
-	}
-}
+
 
 -(BOOL)isValidNumber:(NSString*)number
 {
@@ -423,24 +355,167 @@
  // NOTE: you may change the signature of the following methods. Just keep the given name as a substring.
 // -----------------------------------------------------------------------------------------------------------------
 
-- (void)checkByGCD;
+- (void)checkByGCD:(NSInteger) theInteger;
 {
     // Task 2.2
+    
+    dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // This block will be executed asynchronously on the main thread.
+        //To update the UI.
+        //The delegate method with the result call. If the delegate is nil, this will just do nothing.
+        if (_primeDelegate != nil) {
+            if ([_primeDelegate respondsToSelector:@selector(willPrimeCheckNumber:)])
+            {
+                [_primeDelegate willPrimeCheckNumber:[NSNumber numberWithInt:theInteger]];
+            }
+            else {
+                NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+            }
+        }
+        else {
+            NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+        }
+    });
+    dispatch_async(aQueue, ^(){
+        BOOL *result;
+        result = [self checkPrime: theInteger];
+        
+        
+        //To perform the checking
+        //The delegate method with the result call. If the delegate is nil, this will just do nothing.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (_primeDelegate != nil) {
+            if ([_primeDelegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+            {
+                [_primeDelegate didPrimeCheckNumber:[NSNumber numberWithInt:theInteger] result:result];
+            }
+            else {
+                NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+            }
+        }
+        else {
+            NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+        }
+    });
+    });
+    
+    
 }
 
-- (void)checkByOpQueue;
+- (void)checkByOpQueue:(NSInteger) theInteger;
 {
     // Task 2.3
+    
+   
+    [_myOpQueue setMaxConcurrentOperationCount:1];
+    NSLog(@"Queue Count: %d",_myOpQueue.operationCount);
+    [_myOpQueue cancelAllOperations];
+    [_myOpQueue waitUntilAllOperationsAreFinished];
+    
+    
+    if (_primeDelegate != nil) {
+
+        if ([_primeDelegate respondsToSelector:@selector(willPrimeCheckNumber:)])
+        {
+            [_primeDelegate willPrimeCheckNumber:[NSNumber numberWithInt:theInteger]];
+        }
+        else {
+            NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+        }
+    }
+    else {
+        NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+    }
+    
+    NSBlockOperation *blockOp = [[NSBlockOperation alloc] init];
+    __weak NSBlockOperation * weakOperation = blockOp;
+    [blockOp addExecutionBlock:^()
+                                 {
+                                     
+                                     BOOL *result;
+                                     result = [self checkPrimeAllowCancel: theInteger withOperation:weakOperation ];
+                                     
+                                     if (_primeDelegate != nil) {
+                                         if ([_primeDelegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+                                         {
+                                             [_primeDelegate didPrimeCheckNumber:[NSNumber numberWithInt:theInteger] result:result];
+                                         }
+                                         else {
+                                             NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+                                         }
+                                     }
+                                     else {
+                                         NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+                                     }
+                                     
+//                                     [self checkByGCD:theInteger];
+                                    
+                                 }];
+    [_myOpQueue addOperation:blockOp];
+    
+
+//  /*  NSInvocationOperation *operation = [[NSInvocationOperation alloc] initWithTarget:self
+//                                                                            selector:@selector(checkByGCD:)
+//                                                                              object:nil];
+//    [_myOpQueue addOperation:operation]; */
+//
+//
+    
 }
 
-- (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger;
+
+- (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger withOperation:(NSBlockOperation *)operation;
 {
-    // Task 2.4 (extra credit)
+        
+        BOOL *result;
+        NSInteger checkValue = theInteger;
+                        
+        for (checkValue = 2 ; checkValue <= theInteger - 1 ; checkValue++)
+        {
+        if([operation isCancelled]){return NO;}
+        if (theInteger % checkValue == 0)
+        {
+                result = NO;
+                break;
+        }
+            sleep(1);    // uncomment this line to make the execution significantly longer for a more dramatic effect :D
+            }
+            if (checkValue == theInteger)
+            {
+                result = YES;
+            }
+        return result;
 }
 
-- (void)checkPerserveOrder;
+- (void)checkPerserveOrder:(NSUInteger)theInteger
 {
-    // Task 2.5 (extra credit)
+    
+    NSOperationQueue* newQueue = [[NSOperationQueue alloc] init];
+    
+    NSBlockOperation *blockOp = [NSBlockOperation blockOperationWithBlock:^()
+                                 {
+                                     
+                                     BOOL *result;
+                                     result = [self checkPrime: theInteger];
+                                     if(result)
+                                         NSLog(@"%d is Prime",theInteger);
+                                     else NSLog(@"%d is NOT Prime",theInteger);
+                                     
+                                 }];
+    
+    if([dependantQueues count]>0)
+    {
+        if([[[dependantQueues objectAtIndex:[dependantQueues count]-1] operations] count]>0)
+            
+            [blockOp addDependency:(NSOperation*)[[[dependantQueues objectAtIndex:[dependantQueues count]-1] operations] objectAtIndex:0]];
+    }
+    [newQueue addOperation:blockOp];
+    [dependantQueues addObject:newQueue];
+    
+    
 }
 
 @end
