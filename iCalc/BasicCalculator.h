@@ -30,6 +30,15 @@ typedef enum ApplicationState : NSUInteger
     
 } ApplicationState ;
 
+typedef enum ThreadingType : NSUInteger
+{
+    typeSerial = 0,
+    typeGCD,
+    typeOperationQueue,
+    typeOperationOrder
+    
+} ThreadingType ;
+
 @protocol BasicCalculatorDelegate <NSObject>    // Task 1.2 make ViewController comply with this delegate
 
 - (void)operationDidCompleteWithResult:(NSNumber*)result;
@@ -55,12 +64,13 @@ typedef enum ApplicationState : NSUInteger
 
 @property (assign) BOOL rememberLastResult;
 @property(assign) BOOL
-result1;
+checkPrimeEnabled;
 @property (strong) id<BasicCalculatorDelegate> delegate;
 @property (strong) id<PrimeCalculatorDelegate> primeDelegate; 
 @property (strong) NSNumber *lastOperand;
 @property (strong) NSNumber *lastResult;        // Task 1.3: Use this property for KVO
 @property ApplicationState appState;
+@property ThreadingType threadingType;
 
 - (void)setFirstOperand:(NSNumber*)anOperand;
 - (void)performOperation:(BCOperator)operation withOperand:(NSNumber*)operand storeResult:(BOOL)storeRes;

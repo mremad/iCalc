@@ -141,6 +141,8 @@
     _selectedDecimalPrecision = [[NSUserDefaults standardUserDefaults] integerForKey:@"SavedDecimalPrecision"];
     [self.precisionLabel setText:[NSString stringWithFormat:@"%d",_selectedDecimalPrecision]];
     
+    _primeSwitch.transform = CGAffineTransformMakeScale(0.5, 0.5);
+    
     
     [self loadCurrentState];
     [self updateRemainingEntries];
@@ -218,11 +220,13 @@
     {
         self.expressionModeLabel.text = @"ON";
         basicCalculatorModel.appState = expressionState;
+        [sender setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:1 alpha:0.1]];
     }
     else
     {
         self.expressionModeLabel.text = @"OFF";
         basicCalculatorModel.appState = operandOnlyState;
+        [sender setBackgroundColor:[UIColor whiteColor]];
     }
     
     [self clearDisplay:nil];
@@ -425,26 +429,29 @@
     
     [self.rightRemainingEntries setText:remainingLabel];
     
-    [self visualizedArray].selectedSegmentIndex = [resultManager leftElementsCount];
     
 }
 
 -(IBAction)segmentChanged:(id)sender
 {
+    basicCalculatorModel.threadingType = self.threadingType.selectedSegmentIndex;
     
-    if( ([resultManager savedResultsCount] == 0) || (((UISegmentedControl*)sender).selectedSegmentIndex > ([resultManager savedResultsCount] - 1)))
-    {
-        ((UISegmentedControl*)sender).selectedSegmentIndex = resultManager.historyIndex;
-        return;
+}
+
+-(IBAction)toggleEnabledTextForSwitch:(id)sender{
+    if (_primeSwitch.on){
+        
+        self.primeModeLabel.text = @"ON";
+        basicCalculatorModel.checkPrimeEnabled = YES;
     }
-    resultManager.historyIndex = ((UISegmentedControl*)sender).selectedSegmentIndex;
+    else {
+        
+         self.primeModeLabel.text = @"OFF";
+        basicCalculatorModel.checkPrimeEnabled = NO;
+        self.primeLabel.text = @"";
+        [self.primeActivityIndicator stopAnimating];
+    }
     
-    self.numberTextField.text = [NSString stringWithFormat:[basicCalculatorModel getFormatForDecimalPrecision:_selectedDecimalPrecision],[resultManager getCurrentResult]];
-    
-    
-    textFieldShouldBeCleared = YES;
-    
-    [self updateRemainingEntries];
 }
 
 

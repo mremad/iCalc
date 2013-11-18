@@ -31,6 +31,8 @@
         self.primeDelegate = nil;
 		self.rememberLastResult = YES;
         self.appState = undefinedState;
+        self.checkPrimeEnabled = YES;
+        self.threadingType = typeSerial;
         _myOpQueue = [[NSOperationQueue alloc] init];
         dependantQueues = [[NSMutableArray alloc] init];
 
@@ -83,12 +85,31 @@
     //this is autoreleased
     self.lastOperand = result; //Since NSNumber is immutable, no side-effects. Memory management is done in the setter
 	
-    if(storeRes)
+    if(storeRes && !isnan(result.floatValue)) {
         self.lastResult = result;
+        
+        
+        switch (self.threadingType) {
+            case typeSerial:
+                [self checkWithoutConcurrency:result.integerValue];
+                break;
+            case typeGCD:
+                [self checkByGCD:result.integerValue];
+                break;
+            case typeOperationQueue:
+                [self checkByOpQueue:result.integerValue];
+                break;
+            case typeOperationOrder:
+                [self checkPerserveOrder:result.integerValue];
+                break;
+            default:
+                break;
+        }
+        
+            
+        
+    }
     
-    //Prime call
-     // [self checkByGCD:result.integerValue];
-	[self checkByOpQueue:result.integerValue];
 	// Now call the delegate method with the result. If the delegate is nil, this will just do nothing.
 	if (_delegate != nil) {
 		if ([_delegate respondsToSelector:@selector(operationDidCompleteWithResult:)])
@@ -354,6 +375,38 @@
 #pragma mark part 2
  // NOTE: you may change the signature of the following methods. Just keep the given name as a substring.
 // -----------------------------------------------------------------------------------------------------------------
+-(void)checkWithoutConcurrency:(NSInteger) theInteger;
+{
+    //Task 2.1
+    if (_primeDelegate != nil) {
+        if ([_primeDelegate respondsToSelector:@selector(willPrimeCheckNumber:)])
+        {
+            [_primeDelegate willPrimeCheckNumber:[NSNumber numberWithInt:theInteger]];
+        }
+        else {
+            NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+        }
+    }
+    else {
+        NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+    }
+    BOOL *result;
+    result = [self checkPrime: theInteger];
+    
+    if (_primeDelegate != nil) {
+        if ([_primeDelegate respondsToSelector:@selector(didPrimeCheckNumber:result:)])
+        {
+            [_primeDelegate didPrimeCheckNumber:[NSNumber numberWithInt:theInteger] result:result];
+        }
+        else {
+            NSLog(@"WARNING: the PrimeCalculator delegate does not implement didPrimeCheckNumber:");
+        }
+    }
+    else {
+        NSLog(@"WARNING: the PrimeCalculator delegate is nil");
+    }
+    
+}
 
 - (void)checkByGCD:(NSInteger) theInteger;
 {
@@ -365,8 +418,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         // This block will be executed asynchronously on the main thread.
         //To update the UI.
-        //The delegate method with the result call. If the delegate is nil, this will just do nothing.
-        if (_primeDelegate != nil) {
+            if (_primeDelegate != nil) {
             if ([_primeDelegate respondsToSelector:@selector(willPrimeCheckNumber:)])
             {
                 [_primeDelegate willPrimeCheckNumber:[NSNumber numberWithInt:theInteger]];
@@ -469,7 +521,7 @@
 
 - (BOOL)checkPrimeAllowCancel:(NSInteger)theInteger withOperation:(NSBlockOperation *)operation;
 {
-        
+        //Task 2.5
         BOOL *result;
         NSInteger checkValue = theInteger;
                         
